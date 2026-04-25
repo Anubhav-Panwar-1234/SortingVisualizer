@@ -5,45 +5,86 @@ public class Main {
 
     public static void main(String[] args) {
 
-        JFrame frame = new JFrame("Sorting Algorithm Visualizer - DAA Project");
+        // ===== FRAME =====
+        JFrame frame = new JFrame("Sorting Visualizer");
+
+        // ===== ICON SETUP =====
+        Image icon = Toolkit.getDefaultToolkit().getImage("icon.png");
+
+        // Windows/Linux
+        frame.setIconImage(icon);
+
+        // macOS Dock Icon ⭐ IMPORTANT
+        try {
+            Taskbar taskbar = Taskbar.getTaskbar();
+            taskbar.setIconImage(icon);
+        } catch (Exception e) {
+            System.out.println("Taskbar not supported");
+        }
+
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 650);
+        frame.setSize(1100, 700);
         frame.setLocationRelativeTo(null);
+        frame.setLayout(new BorderLayout());
 
-        SortingPanel panel = new SortingPanel();
-        frame.add(panel, BorderLayout.CENTER);
+        // ===== OBJECT CREATION =====
+        Analyzer analyzer = new Analyzer();
+        GUI gui = new GUI();
+        Visualizer visualizer = new Visualizer(analyzer);
 
-        JPanel controls = new JPanel();
+        // ===== ADD COMPONENTS =====
+        frame.add(visualizer, BorderLayout.CENTER);
+        frame.add(gui, BorderLayout.SOUTH);
 
-        String[] algorithms = {
-                "Bubble Sort",
-                "Selection Sort",
-                "Insertion Sort"
-        };
+        // ===== INITIAL COMPLEXITY DISPLAY =====
+        String initialAlgo = gui.getSelectedAlgorithm();
+        String initialComplexity = "Time: " + analyzer.getTimeComplexity(initialAlgo)
+                + " | Space: " + analyzer.getSpaceComplexity(initialAlgo)
+                + " | Type: " + analyzer.getAlgorithmType(initialAlgo);
 
-        JComboBox<String> algoBox = new JComboBox<>(algorithms);
-        JButton generateBtn = new JButton("Generate");
-        JButton startBtn = new JButton("Start");
+        gui.getComplexityLabel().setText(initialComplexity);
 
-        JLabel comparisonLabel = new JLabel("Comparisons: 0");
-        JLabel swapLabel = new JLabel("Swaps: 0");
+        // ===== ALGORITHM CHANGE LISTENER =====
+        gui.getAlgorithmBox().addActionListener(e -> {
 
-        controls.add(new JLabel("Algorithm: "));
-        controls.add(algoBox);
-        controls.add(generateBtn);
-        controls.add(startBtn);
-        controls.add(comparisonLabel);
-        controls.add(swapLabel);
+            String algo = gui.getSelectedAlgorithm();
 
-        frame.add(controls, BorderLayout.SOUTH);
+            String complexity = "Time: " + analyzer.getTimeComplexity(algo)
+                    + " | Space: " + analyzer.getSpaceComplexity(algo)
+                    + " | Type: " + analyzer.getAlgorithmType(algo);
 
-        generateBtn.addActionListener(e -> panel.generateArray());
-
-        startBtn.addActionListener(e -> {
-            String selected = (String) algoBox.getSelectedItem();
-            panel.startSorting(selected, comparisonLabel, swapLabel);
+            gui.getComplexityLabel().setText(complexity);
         });
 
+        // ===== BUTTON ACTIONS =====
+
+        gui.getGenerateButton().addActionListener(e -> {
+            visualizer.generateArray();
+        });
+
+        gui.getInputButton().addActionListener(e -> {
+            int[] arr = analyzer.getUserInputArray();
+            visualizer.setArray(arr);
+        });
+
+        gui.getStartButton().addActionListener(e -> {
+            String algo = gui.getSelectedAlgorithm();
+            visualizer.startSorting(algo, gui);
+            gui.togglePauseText(false);
+        });
+
+        gui.getPauseButton().addActionListener(e -> {
+
+            visualizer.togglePause();
+
+            if (gui.getPauseButton().getText().equals("Pause")) {
+                gui.togglePauseText(true);
+            } else {
+                gui.togglePauseText(false);
+            }
+        });
+
+        // ===== SHOW FRAME =====
         frame.setVisible(true);
     }
 }
